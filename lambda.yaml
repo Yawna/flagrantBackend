@@ -1,0 +1,11 @@
+bucket: yawna-lambda-staging-grounds
+targets:
+- kind: function
+  name: flagrant_backend
+  layer: flagrant-dependencies
+  bundle:
+    handler: lambda_function.main
+- kind: layer
+  name: flagrant-dependencies
+  dependencies:
+  - kind: poetry

@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "flagrantbackend"
+version = "0.1.0"
+description = "the backend of the flagrant project"
+authors = ["Kristiana Anderson <andersonkristiana@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = ">=3.8.0,<3.10.0"
+boto3 = "^1.24.26"
+
+[tool.poetry.dev-dependencies]
+reviser = {version = "^0.2.15", extras = ["shell"]}
+poetry = "^1.1.14"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
