@@ -20,7 +20,7 @@ EOF
 
 resource "aws_iam_role_policy" "policy" {
   name   = "flagrant_backend_policy"
-  policy = file("execution_policy.json")
+  policy = templatefile("execution_policy.json",{dynamo_arn = aws_dynamodb_table.flagrant_dynamodb_table.arn})
   role   = aws_iam_role.iam_for_lambda.id
 }
 
@@ -53,6 +53,23 @@ resource "aws_lambda_function_url" "public_url" {
     allow_headers     = ["date", "keep-alive"]
     expose_headers    = ["keep-alive", "date"]
     max_age           = 86400
+  }
+}
+
+resource "aws_dynamodb_table" "flagrant_dynamodb_table" {
+  name           = "flagrant_storage"
+  billing_mode   = "PAY_PER_REQUEST"
+  hash_key       = "hash_key"
+  range_key      = "range_key"
+
+  attribute {
+    name = "hash_key"
+    type = "S"
+  }
+
+  attribute {
+    name = "range_key"
+    type = "S"
   }
 }
 

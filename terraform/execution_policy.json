@@ -10,6 +10,16 @@
         "logs:PutLogEvents"        
       ],
       "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:GetItem",
+        "dynamodb:UpdateItem"
+      ],
+      "Resource": [
+        "${dynamo_arn}"
+      ]
     }
   ]
 }
