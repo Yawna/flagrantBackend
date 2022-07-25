@@ -22,31 +22,43 @@ def probability(rating1, rating2):
 # K is a constant.
 # d determines whether
 # Player A wins or Player B.
-def elo_rating(Ra, Rb, K, d):
-  
- 
-    # To calculate the Winning
-    # Probability of Player B
-    Pb = probability(Ra, Rb)
+def elo_rating(rating_1: float, rating_2: float, stake: float, first_won: bool):
+    
+    """
+    Calculate the new elo rating for two competitors based on the incoming match result.
+    
+    :param rating_1:
+        The elo rating of the first player.
+    :param rating_2:
+        The elo rating of the second player.
+    :param stake:
+        The maximum number of points up for grabs in the match. This will never be fully be transferred.
+        A highly unlikely win based on rankings will lead to a large portion of the points being transferred
+        while a highly likely win will lead to few points being transferred.
+    :param first_won:
+        Whether the first player won.
+    """
+
+    Pb = probability(rating_1, rating_2)
  
     # To calculate the Winning
     # Probability of Player A
-    Pa = probability(Rb, Ra)
+    Pa = probability(rating_2, rating_1)
  
     # Case 1: When Player A wins
     # Updating the Elo Ratings
-    if (d) :
-        Ra = Ra + K * (1 - Pa)
-        Rb = Rb + K * (0 - Pb)
+    if (first_won) :
+        rating_1 = rating_1 + stake * (1 - Pa)
+        rating_2 = rating_2 + stake * (0 - Pb)
      
  
     # Case 2: When Player B wins
     # Updating the Elo Ratings
     else :
-        Ra = Ra + K * (0 - Pa)
-        Rb = Rb + K * (1 - Pb)
+        rating_1 = rating_1 + stake * (0 - Pa)
+        rating_2 = rating_2 + stake * (1 - Pb)
      
-    return(round(Ra, 6),round(Rb, 6))
+    return(round(rating_1, 6),round(rating_2, 6))
 
 
 
@@ -54,28 +66,21 @@ client = boto3.client('dynamodb')
 
 def dump_table(table_name):
     results = []
-    last_evaluated_key = None
-    while True:
-        if last_evaluated_key:
-            response = client.scan(
-                TableName=table_name,
-                FilterExpression="contains(#name, :name)",
-                ExpressionAttributeNames={"#name":"hash_key"},
-                ExpressionAttributeValues={":name":{"S":"ranking"}},
-                ExclusiveStartKey=last_evaluated_key
+    kwargs = {}
+    if last_evaluated_key:
+        kwargs = {"ExclusiveStartKey": last_evaluated_key}
+    response = client.scan(
+        TableName=table_name,
+        FilterExpression="contains(#name, :name)",
+        ExpressionAttributeNames={"#name": "hash_key"},
+        ExpressionAttributeValues={":name": {"S": "ranking"}},
+        **kwargs
+    )
+        
+        results.extend([
+            Ranking(item["winner"]["S"], item["state1"]["S"], item["state2"]["S"]) 
+            for item in response['Items']]
             )
-                
-        else: 
-           response = client.scan(
-                TableName=table_name,
-                FilterExpression="contains(#name, :name)",
-                ExpressionAttributeNames={"#name":"hash_key"},
-                ExpressionAttributeValues={":name":{"S":"ranking"}}
-           )
-        last_evaluated_key = response.get('LastEvaluatedKey')
-        
-        results.extend([Ranking(item["winner"]["S"], item["state1"]["S"], item["state2"]["S"]) for item in response['Items']])
-        
         if not last_evaluated_key:
             break
     return results
@@ -104,5 +109,4 @@ for item in ranked:
        Key={"hash_key":{"S":"ratings"},"range_key":{"S":state}},
        UpdateExpression="SET last_update= :p, state_rating= :z",
        ExpressionAttributeValues={":z":{"S":elo},":p":{"S":time}},
-       ReturnValues="UPDATED_NEW"
     ) 
