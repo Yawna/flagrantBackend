@@ -37,7 +37,7 @@ def handle_request_list(event):
         ExpressionAttributeNames={"#name":"hash_key"},
         ExpressionAttributeValues={":name":{"S":"ratings"}}
     )
-    print(response1)
+
     results = [{'state': item["range_key"]["S"],'elo_rating': float(item["state_rating"]["S"])} for item in response1['Items']]
     ranked = sorted(results, key=lambda x: x["elo_rating"], reverse = True)
     return {"results":ranked}
