@@ -15,7 +15,8 @@
       "Effect": "Allow",
       "Action": [
         "dynamodb:GetItem",
-        "dynamodb:UpdateItem"
+        "dynamodb:UpdateItem",
+        "dynamodb:Query"
       ],
       "Resource": [
         "${dynamo_arn}"
